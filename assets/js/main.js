@@ -1,132 +1,268 @@
-// $("#fold").backgroundCycle({
-// 	imageUrls: [
-// 		"assets/img/fold/1.jpg",
-// 		"assets/img/fold/2.jpg",
-// 		"assets/img/fold/3.jpg",
-// 		"assets/img/fold/4.jpg",
-// 		"assets/img/fold/5.jpg",
-// 		"assets/img/fold/6.jpg",
-// 		"assets/img/fold/7.jpg",
-// 		"assets/img/fold/8.jpg",
-// 		"assets/img/fold/9.jpg",
-// 		"assets/img/fold/10.jpg",
-// 		"assets/img/fold/11.jpg",
-// 	],
-// 	duration: 10000,
-// 	fadeSpeed: 1000
-// });
+/*
+	Massively by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+*/
 
-$(document).ready(function(){
-	$('a[href^="#"]').on('click',function (e) {
-	    e.preventDefault();
+(function($) {
 
-	    var target = this.hash;
-	    var $target = $(target);
-
-	    $('html, body').stop().animate({
-	        'scrollTop': $target.offset().top
-	    }, 500, 'swing', function () {
-	        window.location.hash = target;
-	    });
+	skel.breakpoints({
+		xlarge:	'(max-width: 1680px)',
+		large:	'(max-width: 1280px)',
+		medium:	'(max-width: 980px)',
+		small:	'(max-width: 736px)',
+		xsmall:	'(max-width: 480px)',
+		xxsmall: '(max-width: 360px)'
 	});
-});
 
-/* detect touch */
-if("ontouchstart" in window){
-    document.documentElement.className = document.documentElement.className + " touch";
-}
-if(!$("html").hasClass("touch")){
-    /* background fix */
-    $(".parallax").css("background-attachment", "fixed");
-}
+	/**
+	 * Applies parallax scrolling to an element's background image.
+	 * @return {jQuery} jQuery object.
+	 */
+	$.fn._parallax = function(intensity) {
 
-/* fix vertical when not overflow
-call fullscreenFix() if .fullscreen content changes */
-function fullscreenFix(){
-    var h = $('body').height();
-    // set .fullscreen height
-    $(".content-b").each(function(i){
-        if($(this).innerHeight() <= h){
-            $(this).closest(".fullscreen").addClass("not-overflow");
-        }
-    });
-}
-$(window).resize(fullscreenFix);
-fullscreenFix();
+		var	$window = $(window),
+			$this = $(this);
 
-/* resize background images */
-function backgroundResize(){
-    var windowH = $(window).height();
-    $(".background").each(function(i){
-        var path = $(this);
-        // variables
-        var contW = path.width();
-        var contH = path.height();
-        var imgW = path.attr("data-img-width");
-        var imgH = path.attr("data-img-height");
-        var ratio = imgW / imgH;
-        // overflowing difference
-        var diff = parseFloat(path.attr("data-diff"));
-        diff = diff ? diff : 0;
-        // remaining height to have fullscreen image only on parallax
-        var remainingH = 0;
-        if(path.hasClass("parallax") && !$("html").hasClass("touch")){
-            var maxH = contH > windowH ? contH : windowH;
-            remainingH = windowH - contH;
-        }
-        // set img values depending on cont
-        imgH = contH + remainingH + diff;
-        imgW = imgH * ratio;
-        // fix when too large
-        if(contW > imgW){
-            imgW = contW;
-            imgH = imgW / ratio;
-        }
-        //
-        path.data("resized-imgW", imgW);
-        path.data("resized-imgH", imgH);
-        path.css("background-size", imgW + "px " + imgH + "px");
-    });
-}
-$(window).resize(backgroundResize);
-$(window).focus(backgroundResize);
-backgroundResize();
+		if (this.length == 0 || intensity === 0)
+			return $this;
 
-/* set parallax background-position */
-function parallaxPosition(e){
-    var heightWindow = $(window).height();
-    var topWindow = $(window).scrollTop();
-    var bottomWindow = topWindow + heightWindow;
-    var currentWindow = (topWindow + bottomWindow) / 2;
-    $(".parallax").each(function(i){
-        var path = $(this);
-        var height = path.height();
-        var top = path.offset().top;
-        var bottom = top + height;
-        // only when in range
-        if(bottomWindow > top && topWindow < bottom){
-            var imgW = path.data("resized-imgW");
-            var imgH = path.data("resized-imgH");
-            // min when image touch top of window
-            var min = 0;
-            // max when image touch bottom of window
-            var max = - imgH + heightWindow;
-            // overflow changes parallax
-            var overflowH = height < heightWindow ? imgH - height : imgH - heightWindow; // fix height on overflow
-            top = top - overflowH;
-            bottom = bottom + overflowH;
-            // value with linear interpolation
-            var value = min + (max - min) * (currentWindow - top) / (bottom - top);
-            // set background-position
-            var orizontalPosition = path.attr("data-oriz-pos");
-            orizontalPosition = orizontalPosition ? orizontalPosition : "50%";
-            $(this).css("background-position", orizontalPosition + " " + value + "px");
-        }
-    });
-}
-if(!$("html").hasClass("touch")){
-    $(window).resize(parallaxPosition);
-    //$(window).focus(parallaxPosition);
-    $(window).scroll(parallaxPosition);
-    parallaxPosition();
-}
+		if (this.length > 1) {
+
+			for (var i=0; i < this.length; i++)
+				$(this[i])._parallax(intensity);
+
+			return $this;
+
+		}
+
+		if (!intensity)
+			intensity = 0.25;
+
+		$this.each(function() {
+
+			var $t = $(this),
+				$bg = $('<div class="bg"></div>').appendTo($t),
+				on, off;
+
+			on = function() {
+
+				$bg
+					.removeClass('fixed')
+					.css('transform', 'matrix(1,0,0,1,0,0)');
+
+				$window
+					.on('scroll._parallax', function() {
+
+						var pos = parseInt($window.scrollTop()) - parseInt($t.position().top);
+
+						$bg.css('transform', 'matrix(1,0,0,1,0,' + (pos * intensity) + ')');
+
+					});
+
+			};
+
+			off = function() {
+
+				$bg
+					.addClass('fixed')
+					.css('transform', 'none');
+
+				$window
+					.off('scroll._parallax');
+
+			};
+
+			// Disable parallax on ..
+				if (skel.vars.browser == 'ie'		// IE
+				||	skel.vars.browser == 'edge'		// Edge
+				||	window.devicePixelRatio > 1		// Retina/HiDPI (= poor performance)
+				||	skel.vars.mobile)				// Mobile devices
+					off();
+
+			// Enable everywhere else.
+				else {
+
+					skel.on('!large -large', on);
+					skel.on('+large', off);
+
+				}
+
+		});
+
+		$window
+			.off('load._parallax resize._parallax')
+			.on('load._parallax resize._parallax', function() {
+				$window.trigger('scroll');
+			});
+
+		return $(this);
+
+	};
+
+	$(function() {
+
+		var	$window = $(window),
+			$body = $('body'),
+			$wrapper = $('#wrapper'),
+			$header = $('#header'),
+			$nav = $('#nav'),
+			$main = $('#main'),
+			$navPanelToggle, $navPanel, $navPanelInner;
+
+		// Disable animations/transitions until the page has loaded.
+			$window.on('load', function() {
+				window.setTimeout(function() {
+					$body.removeClass('is-loading');
+				}, 100);
+			});
+
+		// Prioritize "important" elements on medium.
+			skel.on('+medium -medium', function() {
+				$.prioritize(
+					'.important\\28 medium\\29',
+					skel.breakpoint('medium').active
+				);
+			});
+
+		// Scrolly.
+			$('.scrolly').scrolly();
+
+		// Background.
+			$wrapper._parallax(0.925);
+
+		// Nav Panel.
+
+			// Toggle.
+				$navPanelToggle = $(
+					'<a href="#navPanel" id="navPanelToggle">Menu</a>'
+				)
+					.appendTo($wrapper);
+
+				// Change toggle styling once we've scrolled past the header.
+					$header.scrollex({
+						bottom: '5vh',
+						enter: function() {
+							$navPanelToggle.removeClass('alt');
+						},
+						leave: function() {
+							$navPanelToggle.addClass('alt');
+						}
+					});
+
+			// Panel.
+				$navPanel = $(
+					'<div id="navPanel">' +
+						'<nav>' +
+						'</nav>' +
+						'<a href="#navPanel" class="close"></a>' +
+					'</div>'
+				)
+					.appendTo($body)
+					.panel({
+						delay: 500,
+						hideOnClick: true,
+						hideOnSwipe: true,
+						resetScroll: true,
+						resetForms: true,
+						side: 'right',
+						target: $body,
+						visibleClass: 'is-navPanel-visible'
+					});
+
+				// Get inner.
+					$navPanelInner = $navPanel.children('nav');
+
+				// Move nav content on breakpoint change.
+					var $navContent = $nav.children();
+
+					skel.on('!medium -medium', function() {
+
+						// NavPanel -> Nav.
+							$navContent.appendTo($nav);
+
+						// Flip icon classes.
+							$nav.find('.icons, .icon')
+								.removeClass('alt');
+
+					});
+
+					skel.on('+medium', function() {
+
+						// Nav -> NavPanel.
+						$navContent.appendTo($navPanelInner);
+
+						// Flip icon classes.
+							$navPanelInner.find('.icons, .icon')
+								.addClass('alt');
+
+					});
+
+				// Hack: Disable transitions on WP.
+					if (skel.vars.os == 'wp'
+					&&	skel.vars.osVersion < 10)
+						$navPanel
+							.css('transition', 'none');
+
+		// Intro.
+			var $intro = $('#intro');
+
+			if ($intro.length > 0) {
+
+				// Hack: Fix flex min-height on IE.
+					if (skel.vars.browser == 'ie') {
+						$window.on('resize.ie-intro-fix', function() {
+
+							var h = $intro.height();
+
+							if (h > $window.height())
+								$intro.css('height', 'auto');
+							else
+								$intro.css('height', h);
+
+						}).trigger('resize.ie-intro-fix');
+					}
+
+				// Hide intro on scroll (> small).
+					skel.on('!small -small', function() {
+
+						$main.unscrollex();
+
+						$main.scrollex({
+							mode: 'bottom',
+							top: '25vh',
+							bottom: '-50vh',
+							enter: function() {
+								$intro.addClass('hidden');
+							},
+							leave: function() {
+								$intro.removeClass('hidden');
+							}
+						});
+
+					});
+
+				// Hide intro on scroll (<= small).
+					skel.on('+small', function() {
+
+						$main.unscrollex();
+
+						$main.scrollex({
+							mode: 'middle',
+							top: '15vh',
+							bottom: '-15vh',
+							enter: function() {
+								$intro.addClass('hidden');
+							},
+							leave: function() {
+								$intro.removeClass('hidden');
+							}
+						});
+
+				});
+
+			}
+
+	});
+
+})(jQuery);
