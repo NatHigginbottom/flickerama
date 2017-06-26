@@ -3074,6 +3074,13 @@
 
 /* Intro */
 
+	#introText {
+	    position: absolute;
+	    top: 35%;
+	    left: 50%;
+	    transform: translateX(-50%);
+	}
+
 	#intro {
 		color: #ffffff;
 		padding: 8rem 4rem 6rem 4rem ;
@@ -4473,4 +4480,10 @@
 			visibility: visible;
 		}
 
+	}
+
+	@media only screen and (max-height: 600px) {
+		#introText {
+			top: 250px;
+		}
 	}
